@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: steelblue;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.x.axis path {
+  display: none;
+}
+
+</style>
+<body>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 720 - margin.left - margin.right,
+    height = 380 - margin.top - margin.bottom;
+
+var x0 = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .4);
+
+var x1 = d3.scale.ordinal();
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var color = d3.scale.ordinal()
+    .range(["#98abc5", "#6b486b", "#7b6888", "#8a89a6", "#a05d56", "#d0743c", "#ff8c00"]);
+
+var xAxis = d3.svg.axis()
+    .scale(x0)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .tickFormat(d3.format(".2s"));
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("movie_metadata.csv", function(error, data) {
+  if (error) throw error;
+
+  var acting = [];
+  var grossbudget = d3.keys(data[0]).filter(function(key) { 
+    return (key == "gross" || key == "budget");});
+  //console.log(data);
+  var allmovies = d3.keys(data[0]).filter(function(key) { 
+    return (key == "movie_title" || key == "gross" || key == "budget");});
+//console.log(allmovies);
+  data.forEach(function(d) {
+    //console.log(d.actor_1_name == "Johnny Depp");
+    //if (d.actor_1_name == "Johnny Depp") {
+    d.ages = grossbudget.map(function(name) { return {name: name, value: +d[name]}; });
+    d.gbm = allmovies.map(function(name) { return {name: name, value: d[name]}; });
+
+   // console.log(d.gbm);
+    if (d.actor_1_name == "Chris Hemsworth") {
+      acting.push(d.movie_title);
+    } 
+  });
+
+  //console.log(acting);
+  x0.domain(acting);
+  //console.log(acting.length);
+  data = data.filter(function(d) {
+    for(var i = 0; i <acting.length; i++) {
+      if(d.movie_title == acting[i]) {
+        return true;
+      }
+    }
+    return false;
+  });
+  //console.log(data);
+  x1.domain(grossbudget).rangeRoundBands([0, x0.rangeBand()]);
+  y.domain([0, d3.max(data, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Dollars");
+
+
+  var state = svg.selectAll(".state")
+      .data(data)
+    .enter().append("g")
+      .attr("class", "state")
+      .attr("transform", function(d) {return "translate(" + x0(d.movie_title) + ",0)"; });
+
+  state.selectAll(".bar")
+      .data(function(d) {return d.ages})
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("width", x1.rangeBand())
+      .attr("x", function(d) {console.log(d); return x1(d.name); })
+      .attr("y", function(d) {return y(d.value); })
+      .attr("height", function(d) {return height - y(d.value); })
+      .style("fill", function(d) { return color(d.name); })
+      .on("mouseover", function() { 
+        d3.select(this)
+              .style("fill", "red");
+        tooltip.style("display", null); })
+      .on("mouseout", function() { 
+        d3.select(this).style("fill", function(d) {
+                return color(d.name);
+            });
+        tooltip.style("display", "none"); })
+      .on("mousemove", function(d) {
+        var xPosition = d3.mouse(this)[0]+80;
+        var yPosition = d3.mouse(this)[1];
+        tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")")
+        tooltip.select("text").text(d.name + " dollar: $" + d.value);
+        //console.log(d);
+      })
+
+
+/*.on("mouseover", function(d) {
+          tooltip.transition()
+          .duration(200) //200 refers to the transition that it comes into
+          .style("opacity", .75);
+
+
+
+          tooltip.html("<strong>"+ d["movie_title"] +"</strong><br/>Year Released: "
+            + d["title_year"] + "<br/>Gross Profit: $" + d["gross"] )//see around ;line 12
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY) + "px") });*/
+
+
+
+
+
+      var tooltip = svg.append("g")
+      .attr("class", "tooltip")
+      .style("display", "none");
+
+      tooltip.append("text")
+      .attr("x", 15)
+      .attr("dy", "1.2em")
+      .style("text-anchor", "middle")
+      .attr("font-size", "12px")
+      .attr("font-weight", "bold");
+
+  var legend = svg.selectAll(".legend")
+      .data(grossbudget.slice().reverse())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  legend.append("rect")
+      .attr("x", width - 18)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+  legend.append("text")
+      .attr("x", width - 24)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d; });
+
+});
+
+</script>
