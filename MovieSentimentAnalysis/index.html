@@ -1,0 +1,93 @@
+<head>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
+</head>
+
+<body>
+
+<div id="myDiv" style="width: 480px; height: 400px;"><!-- Plotly chart will be drawn inside this DIV --></div>
+<script>
+    <!-- JAVASCRIPT CODE GOES HERE -->
+    // Enter a speed between 0 and 180
+    d3.csv("movie_metadataAppended.csv", function(data) {
+        var level = undefined;
+        var sentiment = data[14]["Sentiment"]
+        if (sentiment == "Without Sentiment") {
+            level = 15;
+        } else if (sentiment == "Strong Negative") {
+            level = 46;
+        } else if (sentiment == "Negative") {
+            level = 76;
+        } else if (sentiment == "Neutral") {
+            level = 106;
+        } else if (sentiment == "Positive") {
+            level = 136;
+        } else {
+            level = 166;
+        }
+
+        // Trig to calc meter point
+        var degrees = 180 - level,
+            radius = .5;
+        var radians = degrees * Math.PI / 180;
+        var x = radius * Math.cos(radians);
+        var y = radius * Math.sin(radians);
+
+        // Path: may have to change to create a better triangle
+        var mainPath = 'M -.0 -0.025 L .0 0.025 L ',
+            pathX = String(x),
+            space = ' ',
+            pathY = String(y),
+            pathEnd = ' Z';
+        var path = mainPath.concat(pathX,space,pathY,pathEnd);
+
+        var data = [{ type: 'scatter',
+            x: [0], y:[0],
+            marker: {size: 28, color:'850000'},
+            showlegend: false,
+            name: '',
+            text: '',
+            hoverinfo: 'text+name'},
+            { values: [50/6, 50/6, 50/6, 50/6, 50/6, 50/6, 50],
+                rotation: 90,
+                text: ['Strong Positive', 'Positive', 'Neutral', 'Negative',
+                    'Strong Negative', 'Without Sentiment'],
+                textinfo: 'text',
+                textposition:'inside',
+                marker: {colors:['rgba(14, 127, 0, .5)', 'rgba(110, 154, 22, .5)',
+                    'rgba(170, 202, 42, .5)', 'rgba(202, 209, 95, .5)',
+                    'rgba(210, 206, 145, .5)', 'rgba(232, 226, 202, .5)',
+                    'rgba(255, 255, 255, 0)']},
+                labels: ['Strong Positive', 'Positive', 'Neutral', 'Negative', 'Strong Negative', 'Without Sentiment'],
+                hoverinfo: 'label',
+                hole: .5,
+                type: 'pie',
+                showlegend: false
+            }];
+
+        var layout = {
+            shapes:[{
+                type: 'path',
+                path: path,
+                fillcolor: '850000',
+                line: {
+                    color: '850000'
+                }
+            }],
+            title: 'Sentiment Analysis Gauge (Based on Plot Keywords)',
+            Speed: '0-100',
+            height: 500,
+            width: 500,
+            xaxis: {zeroline:false, showticklabels:false,
+                showgrid: false, range: [-1, 1]},
+            yaxis: {zeroline:false, showticklabels:false,
+                showgrid: false, range: [-1, 1]}
+        };
+
+        Plotly.newPlot('myDiv', data, layout);
+
+    });
+
+</script>
+</body>
