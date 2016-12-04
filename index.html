@@ -31,35 +31,35 @@ body {
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script>
 
-var margin = {top: 20, right: 50, bottom: 200, left: 40},
-    width = 720 - margin.left - margin.right,
-    height = 380 - margin.top - margin.bottom;
+var gbmargin = {top: 20, right: 50, bottom: 200, left: 40},
+    gbwidth = 720 - gbmargin.left - gbmargin.right,
+    gbheight = 380 - gbmargin.top - gbmargin.bottom;
 
-var x0 = d3.scale.ordinal()
-    .rangeRoundBands([0, width], .4);
+var gbx0 = d3.scale.ordinal()
+    .rangeRoundBands([0, gbwidth], .4);
 
-var x1 = d3.scale.ordinal();
+var gbx1 = d3.scale.ordinal();
 
-var y = d3.scale.linear()
-    .range([height, 0]);
+var gby = d3.scale.linear()
+    .range([gbheight, 0]);
 
-var color = d3.scale.ordinal()
+var gbcolor = d3.scale.ordinal()
     .range(["#98abc5", "#6b486b", "#7b6888", "#8a89a6", "#a05d56", "#d0743c", "#ff8c00"]);
 
-var xAxis = d3.svg.axis()
-    .scale(x0)
+var gbxAxis = d3.svg.axis()
+    .scale(gbx0)
     .orient("bottom");
 
-var yAxis = d3.svg.axis()
-    .scale(y)
+var gbyAxis = d3.svg.axis()
+    .scale(gby)
     .orient("left")
     .tickFormat(d3.format(".2s"));
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+var gbsvg = d3.select("body").append("svg")
+    .attr("width", gbwidth + gbmargin.left + gbmargin.right)
+    .attr("height", gbheight + gbmargin.top + gbmargin.bottom)
   .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", "translate(" + gbmargin.left + "," + gbmargin.top + ")");
 
 d3.csv("movie_metadata.csv", function(error, data) {
   if (error) throw error;
@@ -84,7 +84,7 @@ d3.csv("movie_metadata.csv", function(error, data) {
   });
 
   //console.log(acting);
-  x0.domain(acting);
+  gbx0.domain(acting);
   //console.log(acting.length);
   data = data.filter(function(d) {
     for(var i = 0; i <acting.length; i++) {
@@ -95,14 +95,14 @@ d3.csv("movie_metadata.csv", function(error, data) {
     return false;
   });
   //console.log(data);
-  x1.domain(grossbudget).rangeRoundBands([0, x0.rangeBand()]);
-  y.domain([0, d3.max(data, function(d) {return d3.max(d.gbm, function(d) {return d.value; }); })]);
+  gbx1.domain(grossbudget).rangeRoundBands([0, gbx0.rangeBand()]);
+  gby.domain([0, d3.max(data, function(d) {return d3.max(d.gbm, function(d) {return d.value; }); })]);
 
-  svg.append("g")
+  gbsvg.append("g")
       .attr("class", "x axis")
-      .attr("transform", "translate(0," + height + ")")
+      .attr("transform", "translate(0," + gbheight + ")")
       .transition().duration(300)
-      .call(xAxis)
+      .call(gbxAxis)
       .selectAll("text")  
             .style("text-anchor", "end")
             .attr("dx", "-.8em")
@@ -111,9 +111,9 @@ d3.csv("movie_metadata.csv", function(error, data) {
                 return "rotate(-65)" 
                 });
 
-  svg.append("g")
+  gbsvg.append("g")
       .attr("class", "y axis")
-      .call(yAxis)
+      .call(gbyAxis)
     .append("text")
     .transition().duration(300)
       .attr("transform", "rotate(-90)")
@@ -123,38 +123,38 @@ d3.csv("movie_metadata.csv", function(error, data) {
       .text("Dollars");
 
 
-  var state = svg.selectAll(".state")
+  var state = gbsvg.selectAll(".state")
       .data(data)
     .enter().append("g")
       .attr("class", "state")
-      .attr("transform", function(d) {return "translate(" + x0(d.movie_title) + ",0)"; });
+      .attr("transform", function(d) {return "translate(" + gbx0(d.movie_title) + ",0)"; });
 
   state.selectAll(".bar")
       .data(function(d) {return d.ages;})
 
     .enter().append("rect")
       .attr("class", "bar")
-      .attr("width", x1.rangeBand())
-      .attr("x", function(d) {return x1(d.name); })
-      .attr("y", function(d) {; return y(+(d.value[d.name])); })
-      .attr("height", function(d) {return height - y(d.value[d.name]); })
-      .style("fill", function(d) { return color(d.name); })
+      .attr("width", gbx1.rangeBand())
+      .attr("x", function(d) {return gbx1(d.name); })
+      .attr("y", function(d) {; return gby(+(d.value[d.name])); })
+      .attr("height", function(d) {return gbheight - gby(d.value[d.name]); })
+      .style("fill", function(d) { return gbcolor(d.name); })
       
       .on("mouseover", function() { 
         d3.select(this)
               .style("fill", "red");
-        tooltip.style("display", null); })
+        gbtooltip.style("display", null); })
       .on("mouseout", function() { 
         d3.select(this).style("fill", function(d) {
-                return color(d.name);
+                return gbcolor(d.name);
             });
-        tooltip.style("display", "none"); })
+        gbtooltip.style("display", "none"); })
       .on("mousemove", function(d) {
-        var xPosition = d3.mouse(this)[0]+80;
-        var yPosition = d3.mouse(this)[1];
-        tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")")
+        var gbxPosition = d3.mouse(this)[0]+80;
+        var gbyPosition = d3.mouse(this)[1];
+        gbtooltip.attr("transform", "translate(" + gbxPosition + "," + gbyPosition + ")")
 
-        tooltip.select("text").text(d.name + " dollar: $" + d.value[d.name]);
+        gbtooltip.select("text").text(d.name + " dollar: $" + d.value[d.name]);
         //console.log(d);
       })
 
@@ -175,31 +175,31 @@ d3.csv("movie_metadata.csv", function(error, data) {
 
 
 
-      var tooltip = svg.append("g")
+      var gbtooltip = gbsvg.append("g")
       .attr("class", "tooltip")
       .style("display", "none");
 
-      tooltip.append("text")
+      gbtooltip.append("text")
       .attr("x", 15)
       .attr("dy", "1.2em")
       .style("text-anchor", "middle")
       .attr("font-size", "12px")
       .attr("font-weight", "bold");
 
-  var legend = svg.selectAll(".legend")
+  var gblegend = gbsvg.selectAll(".legend")
       .data(grossbudget.slice().reverse())
     .enter().append("g")
       .attr("class", "legend")
       .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 
-  legend.append("rect")
-      .attr("x", width +30)
+  gblegend.append("rect")
+      .attr("x", gbwidth +30)
       .attr("width", 18)
       .attr("height", 18)
-      .style("fill", color);
+      .style("fill", gbcolor);
 
-  legend.append("text")
-      .attr("x", width + 24)
+  gblegend.append("text")
+      .attr("x", gbwidth + 24)
       .attr("y", 9)
       .attr("dy", ".35em")
       .style("text-anchor", "end")
