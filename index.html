@@ -31,7 +31,7 @@ body {
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script>
 
-var margin = {top: 20, right: 20, bottom: 30, left: 40},
+var margin = {top: 20, right: 50, bottom: 200, left: 40},
     width = 720 - margin.left - margin.right,
     height = 380 - margin.top - margin.bottom;
 
@@ -69,13 +69,13 @@ d3.csv("movie_metadata.csv", function(error, data) {
     return (key == "gross" || key == "budget");});
   //console.log(data);
   var allmovies = d3.keys(data[0]).filter(function(key) { 
-    return (key == "movie_title" || key == "gross" || key == "budget");});
+    return (key == "gross" || key == "budget");});
 //console.log(allmovies);
   data.forEach(function(d) {
     //console.log(d.actor_1_name == "Johnny Depp");
     //if (d.actor_1_name == "Johnny Depp") {
-    d.ages = grossbudget.map(function(name) { return {name: name, value: +d[name]}; });
-    d.gbm = allmovies.map(function(name) { return {name: name, value: d[name]}; });
+    d.ages = grossbudget.map(function(name) { return {name: name, value: d}; });
+    d.gbm = grossbudget.map(function(name) { return {name: name, value: +d[name]}; });
 
    // console.log(d.gbm);
     if (d.actor_1_name == "Chris Hemsworth") {
@@ -96,17 +96,26 @@ d3.csv("movie_metadata.csv", function(error, data) {
   });
   //console.log(data);
   x1.domain(grossbudget).rangeRoundBands([0, x0.rangeBand()]);
-  y.domain([0, d3.max(data, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })]);
+  y.domain([0, d3.max(data, function(d) {return d3.max(d.gbm, function(d) {return d.value; }); })]);
 
   svg.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height + ")")
-      .call(xAxis);
+      .transition().duration(300)
+      .call(xAxis)
+      .selectAll("text")  
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-65)" 
+                });
 
   svg.append("g")
       .attr("class", "y axis")
       .call(yAxis)
     .append("text")
+    .transition().duration(300)
       .attr("transform", "rotate(-90)")
       .attr("y", 6)
       .attr("dy", ".71em")
@@ -121,14 +130,16 @@ d3.csv("movie_metadata.csv", function(error, data) {
       .attr("transform", function(d) {return "translate(" + x0(d.movie_title) + ",0)"; });
 
   state.selectAll(".bar")
-      .data(function(d) {return d.ages})
+      .data(function(d) {return d.ages;})
+
     .enter().append("rect")
       .attr("class", "bar")
       .attr("width", x1.rangeBand())
-      .attr("x", function(d) {console.log(d); return x1(d.name); })
-      .attr("y", function(d) {return y(d.value); })
-      .attr("height", function(d) {return height - y(d.value); })
+      .attr("x", function(d) {return x1(d.name); })
+      .attr("y", function(d) {; return y(+(d.value[d.name])); })
+      .attr("height", function(d) {return height - y(d.value[d.name]); })
       .style("fill", function(d) { return color(d.name); })
+      
       .on("mouseover", function() { 
         d3.select(this)
               .style("fill", "red");
@@ -142,7 +153,8 @@ d3.csv("movie_metadata.csv", function(error, data) {
         var xPosition = d3.mouse(this)[0]+80;
         var yPosition = d3.mouse(this)[1];
         tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")")
-        tooltip.select("text").text(d.name + " dollar: $" + d.value);
+
+        tooltip.select("text").text(d.name + " dollar: $" + d.value[d.name]);
         //console.log(d);
       })
 
@@ -181,13 +193,13 @@ d3.csv("movie_metadata.csv", function(error, data) {
       .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 
   legend.append("rect")
-      .attr("x", width - 18)
+      .attr("x", width +30)
       .attr("width", 18)
       .attr("height", 18)
       .style("fill", color);
 
   legend.append("text")
-      .attr("x", width - 24)
+      .attr("x", width + 24)
       .attr("y", 9)
       .attr("dy", ".35em")
       .style("text-anchor", "end")
